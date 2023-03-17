@@ -35,7 +35,8 @@ def handle_text(tg_message):
         #print(f'@{user_name}({user_id})->'+message)
         #print('Bot->'+reply)
     except Exception as e:
-        bot.send_message(tg_message.chat.id, "Пожалуйста, введите свой запрос еще раз!")
+        bot.send_message(421486813, f"@{user_name}({user_id}) перезапуск ошибка->{e}")
+        bot.send_message(tg_message.chat.id, "Извините, мой пул сообщений был переполнен, повторите свое последнее сообщение.\nЕсли я перестал отвечать, напиши об этом моему создателю @alexan_25")
         #print(e)
         # при возникновении исключения запускаем программу заново
         os.execv(sys.executable, [sys.executable] + sys.argv)
