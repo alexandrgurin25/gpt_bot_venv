@@ -14,8 +14,19 @@ bot = telebot.TeleBot('6007451380:AAEjLTNJCUOeeAHLYP93CcfP-6l6EVOC-OI')
 # Функция, обрабатывающая команду /start
 @bot.message_handler(commands=["start"])
 def start(m, res=False):
-    bot.send_message(m.chat.id, 'Я на связи. Напиши мне что-нибудь )')
+    bot.send_message(m.chat.id, f'Здравствуй, {m.from_user.first_name}!\n\
+Я - искусственный интеллект, созданный OpenAI. Я разработан для помощи людям в общении, работе и решении различных задач.\
+ Моя цель - помочь людям в их ежедневной жизни и сделать их более продуктивными и удобными.\n\
+Как я могу помочь Вам, {m.from_user.first_name}?')
 
+# Функция, обрабатывающая команду /start
+@bot.message_handler(commands=["reload"])
+def reload(m, res=False):
+    bot.send_message(m.chat.id, "Вынужденный перезапуск!")
+    if(m.chat.id != 421486813): bot.send_message(421486813, f"{m.from_user.first_name}@{m.from_user.username}Вынужденный перезапуск!")
+    os.execv(sys.executable, [sys.executable] + sys.argv)
+    
+# Функция, обрабатывающая фото
 @bot.message_handler(content_types=["photo"])
 def handle_text(tg_message):
     bot.send_message(tg_message.chat.id, 'Я думаю, что на картинке что-то очень важное, но открывать специально не буду:)')
@@ -35,7 +46,7 @@ def handle_text(tg_message):
         #print(f'@{user_name}({user_id})->'+message)
         #print('Bot->'+reply)
     except Exception as e:
-        bot.send_message(421486813, f"@{user_name}({user_id}) перезапуск ошибка->{e}")
+        bot.send_message(421486813, f"@{user_name}({user_id} {tg_message.from_user.first_name}) перезапуск ошибка->{e}")
         bot.send_message(tg_message.chat.id, "Извините, мой пул сообщений был переполнен, повторите свое последнее сообщение.\nЕсли я перестал отвечать, напиши об этом моему создателю @alexan_25")
         #print(e)
         # при возникновении исключения запускаем программу заново
