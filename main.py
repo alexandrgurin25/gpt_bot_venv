@@ -15,7 +15,7 @@ bot = telebot.TeleBot('6007451380:AAEjLTNJCUOeeAHLYP93CcfP-6l6EVOC-OI')
 @bot.message_handler(commands=["start"])
 def start(m, res=False):
     bot.send_message(m.chat.id, f'Здравствуй, {m.from_user.first_name}!\n\
-Я - искусственный интеллект, созданный OpenAI. Я разработан для помощи людям в общении, работе и решении различных задач.\
+Я - искусственный интеллект, созданный OpenAI и @alexan_25. Я разработан для помощи людям в общении, работе и решении различных задач.\
  Моя цель - помочь людям в их ежедневной жизни и сделать их более продуктивными и удобными.\n\
 Как я могу помочь Вам, {m.from_user.first_name}?')
 
