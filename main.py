@@ -4,11 +4,10 @@ import telebot
 import openai
 import sqlite3
 from sqlite3 import Error
-from datetime import datetime
-
+from datetime import datetime, timedelta
 
 # указываем ключ из личного кабинета openai
-openai.api_key = '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'
+openai.api_key = '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'
 
 # создаем соединение с базой данных SQLite
 try:
@@ -42,6 +41,25 @@ def save_message(conn, user_id, user_name, content, role, timestamp):
         c.execute('''INSERT INTO messages (user_id, user_name, content, role, timestamp)
                      VALUES (?, ?, ?, ?, ?)''', (user_id, user_name, content, role, timestamp))
         conn.commit()
+    except Error as e:
+        print(f"The error '{e}' occurred")
+
+def get_last_message(conn):
+    try:
+        c = conn.cursor()
+        c.execute('''SELECT * FROM messages ORDER BY id DESC LIMIT 1''')
+        row = c.fetchone()
+        if row:
+            return {
+                "id": row[0],
+                "user_id": row[1],
+                "user_name": row[2],
+                "content": row[3],
+                "role": row[4],
+                "timestamp": row[5]
+            }
+        else:
+            return None
     except Error as e:
         print(f"The error '{e}' occurred")
 
@@ -80,31 +98,40 @@ def start(m, res=False):
  Моя цель - помочь людям в их ежедневной жизни и сделать их более продуктивными и удобными.\n\
 Как я могу помочь Вам, {m.from_user.first_name}?')
 
+last_message = None
+
 # Получение сообщений от юзера
 @bot.message_handler(content_types=["text"])
 def handle_text(tg_message):
-       # создаем соединение с базой данных SQLite
+    global last_message
+    
+    # создаем соединение с базой данных SQLite
     try:
         conn = sqlite3.connect('messages.db')
     except Error as e:
         print(f"The error '{e}' occurred")
-    
+
     try:
         user_id = tg_message.chat.id
         user_name = tg_message.from_user.username
         message = tg_message.text
         timestamp = tg_message.date
         save_message(conn, user_id, user_name, message, "user", timestamp) # сохраняем сообщение пользователя в базу данных
-        messages.append({"role": "user", "content": message})
+        
+        messages = [{"role": "user", "content": message}]
+        if last_message:
+            messages.append({"role": "assistant", "content": last_message})
+        
         chat = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages = messages)
         reply = chat.choices[0].message.content
         bot.send_message(tg_message.chat.id, reply)
-        messages.append({"role":"assistant", "content": reply})
+        
+        last_message = reply
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         save_message(conn, user_id, user_name, reply, "assistant", timestamp) # сохраняем ответ бота в базу данных
     except Exception as e:
         bot.send_message(421486813, f"@{user_name}({user_id} {tg_message.from_user.first_name}) перезапуск ошибка->{e}")
-        bot.send_message(tg_message.chat.id, "Извините, мой пул сообщений был переполнен, повторите свое последнее сообщение.\nЕсли я перестал отвечать, напиши об этом моему создателю @alexan_25")
+        bot.send_message(tg_message.chat.id, "Извините за неудобства, произошла непредвиденная перезагрузка, которая прервала нашу связь. Пожалуйста, повторите ваше последнее сообщение еще раз, чтобы я мог продолжить нашу беседу. Благодарю за понимание!\n\nЕсли я перестал отвечать, напиши об этом моему создателю @alexan_25")
         os.execv(sys.executable, [sys.executable] + sys.argv)
 
 # Запускаем бота
