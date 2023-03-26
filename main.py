@@ -115,18 +115,16 @@ def handle_text(tg_message):
         user_id = tg_message.chat.id
         user_name = tg_message.from_user.username
         message = tg_message.text
-        timestamp = tg_message.date
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         user_first_name = tg_message.from_user.first_name
         user_second_name = tg_message.from_user.last_name
         save_message(conn, user_id, user_name, user_first_name, user_second_name, message, "user", timestamp) # сохраняем сообщение пользователя в базу данных
-        
         messages = [{"role": "user", "content": message}]
         if last_message: messages.append({"role": "assistant", "content": last_message})
         chat = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages = messages)
         reply = chat.choices[0].message.content
         bot.send_message(tg_message.chat.id, reply)
         last_message = reply
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         save_message(conn, user_id, "GPT CHAT", "БОТ", "", reply, "gpt-bot", timestamp) # сохраняем ответ бота в базу данных
     except Exception as e:
         bot.send_message(421486813, f"@{user_name}({user_id} {user_first_name}) перезапуск ошибка->{e}")
