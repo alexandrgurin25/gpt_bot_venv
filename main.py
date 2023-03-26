@@ -17,7 +17,7 @@ except Error as e:
 
 
 # Создаем экземпляр бота
-bot = telebot.TeleBot('6007451380:AAEjLTNJCUOeeAHLYP93CcfP-6l6EVOC-OI')
+bot = telebot.TeleBot('6007451380:AAHT5IeSV9j0Wkbn0m1U_RxnQrmziaeAHfQ')
 
 
 # Функция для создания таблицы в базе данных SQLite
