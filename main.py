@@ -4,21 +4,17 @@ import telebot
 import openai
 import sqlite3
 from sqlite3 import Error
-from datetime import datetime, timedelta
+from datetime import datetime
 
-# указываем ключ из личного кабинета openai
-openai.api_key = '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'
+# Иппорт ключей
+from api_key import openai
+from api_key import bot
 
 # создаем соединение с базой данных SQLite
 try:
     conn = sqlite3.connect('messages.db')
 except Error as e:
     print(f"The error '{e}' occurred")
-
-
-# Создаем экземпляр бота
-bot = telebot.TeleBot('6007451380:AAHT5IeSV9j0Wkbn0m1U_RxnQrmziaeAHfQ')
-
 
 # Функция для создания таблицы в базе данных SQLite
 def create_table(conn):
