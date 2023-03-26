@@ -28,6 +28,8 @@ def create_table(conn):
                      (id INTEGER PRIMARY KEY AUTOINCREMENT,
                       user_id INTEGER,
                       user_name TEXT,
+                      user_first_name TEXT,
+                      user_second_name TEXT,
                       content TEXT,
                       role TEXT,
                       timestamp TEXT)''')
@@ -35,11 +37,11 @@ def create_table(conn):
         print(f"The error '{e}' occurred")
 
 # Функция для сохранения сообщения в базе данных SQLite
-def save_message(conn, user_id, user_name, content, role, timestamp):
+def save_message(conn, user_id, user_name, user_first_name, user_second_name, content, role, timestamp):
     try:
         c = conn.cursor()
-        c.execute('''INSERT INTO messages (user_id, user_name, content, role, timestamp)
-                     VALUES (?, ?, ?, ?, ?)''', (user_id, user_name, content, role, timestamp))
+        c.execute('''INSERT INTO messages (user_id, user_name, user_first_name, user_second_name, content, role, timestamp)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)''', (user_id, user_name, user_first_name, user_second_name, content, role, timestamp))
         conn.commit()
     except Error as e:
         print(f"The error '{e}' occurred")
@@ -54,9 +56,11 @@ def get_last_message(conn):
                 "id": row[0],
                 "user_id": row[1],
                 "user_name": row[2],
-                "content": row[3],
-                "role": row[4],
-                "timestamp": row[5]
+                "user_first_name": row[3],
+                "user_second_name": row[4],
+                "content": row[5],
+                "role": row[6],
+                "timestamp": row[7]
             }
         else:
             return None
@@ -116,22 +120,21 @@ def handle_text(tg_message):
         user_name = tg_message.from_user.username
         message = tg_message.text
         timestamp = tg_message.date
-        save_message(conn, user_id, user_name, message, "user", timestamp) # сохраняем сообщение пользователя в базу данных
+        user_first_name = tg_message.from_user.first_name
+        user_second_name = tg_message.from_user.last_name
+        save_message(conn, user_id, user_name, user_first_name, user_second_name, message, "user", timestamp) # сохраняем сообщение пользователя в базу данных
         
         messages = [{"role": "user", "content": message}]
-        if last_message:
-            messages.append({"role": "assistant", "content": last_message})
-        
+        if last_message: messages.append({"role": "assistant", "content": last_message})
         chat = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages = messages)
         reply = chat.choices[0].message.content
         bot.send_message(tg_message.chat.id, reply)
-        
         last_message = reply
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        save_message(conn, user_id, user_name, reply, "assistant", timestamp) # сохраняем ответ бота в базу данных
+        save_message(conn, user_id, "GPT CHAT", "БОТ", "", reply, "gpt-bot", timestamp) # сохраняем ответ бота в базу данных
     except Exception as e:
-        bot.send_message(421486813, f"@{user_name}({user_id} {tg_message.from_user.first_name}) перезапуск ошибка->{e}")
-        bot.send_message(tg_message.chat.id, "Извините за неудобства, произошла непредвиденная перезагрузка, которая прервала нашу связь. Пожалуйста, повторите ваше последнее сообщение еще раз, чтобы я мог продолжить нашу беседу. Благодарю за понимание!\n\nЕсли я перестал отвечать, напиши об этом моему создателю @alexan_25")
+        bot.send_message(421486813, f"@{user_name}({user_id} {user_first_name}) перезапуск ошибка->{e}")
+        bot.send_message(user_id, "Извините за неудобства, произошла непредвиденная перезагрузка, которая прервала нашу связь. Пожалуйста, повторите ваше последнее сообщение еще раз, чтобы я мог продолжить нашу беседу. Благодарю за понимание!\n\nЕсли я перестал отвечать, напиши об этом моему создателю @alexan_25")
         os.execv(sys.executable, [sys.executable] + sys.argv)
 
 # Запускаем бота
